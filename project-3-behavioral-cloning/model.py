@@ -275,8 +275,8 @@ def main(_):
     plt.ylabel("MSE Loss")
     plt.xlabel("Epoch")
     plt.legend(["Training set", "Validation set"], loc="upper right")
-
-    plt.savefig("./report_images/loss-history.png", bbox_inches='tight')
+    #plt.savefig("./report_images/loss-history.png", bbox_inches='tight')
+    plt.show()
 
 
 # --- MAIN ---
