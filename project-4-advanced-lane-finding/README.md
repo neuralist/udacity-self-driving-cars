@@ -13,7 +13,7 @@ It is a part of the Udacity nanodegree Self Driving Cars, term 1.
 ### The Lane Line Detector
 
 ##### Description
-The lane line detector is described in [Project Report.md](./Project Report.md). 
+The lane line detector is described in [Project Report.md]("./Project Report.md"). 
 
 ##### Implementation
 The lane line detector is implemented in the Jupyter notebook [Advanced Lane Finding.ipynb](./Advanced_Lane_Finding.ipynb).
