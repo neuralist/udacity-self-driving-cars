@@ -18,7 +18,7 @@ The major types of distortion effects are radial and tangential. Radial distorti
 
 The distortion effects of a particular camera can be described with a set of coefficients: (_k1, k2, p1, p2, k3_). To determine the values of the distortion coefficients, chessboard images are used: 
 
-![Calibration image](./report_images/calibration2.jpg "Calibration image"){width=75%}
+<img src="./report_images/calibration2.jpg" alt="Calibration image" width="75%" height="75%">
 
 The high contrast pattern is perfect for automatically detecting points in the image, and it is also easy to tell what a successfully undistored image should look like. The corners in the image are used as mapping points. Corners are defined as intersections of two black and two white squares. Thus, as can be seen in the example image above, the chessboard contains 9x6 corners.  
 
@@ -33,7 +33,7 @@ _C_ is called the camera calibration matrix. By postulating that the chessboard 
 
 In object space, corners are placed at integer coordinates (1, 1), (2, 1), ..., (9, 6). An automatic corner detection function is used to determine the corner coordinates in image space:
 
-![Detected corners](./report_images/detected_corners.png "Detected corners"){width=75%}
+<img src="./report_images/detected_corners.png" alt="Detected corners" width="75%" height="75%">
 
 With the mapping between object points and image points established, the camera calibration matrix and distortion coefficients can be calculated. In the set of 20 calibration images available, three images do not display all corners. They are discarded from the calibration procedure, since 17 out of 20 is good enough.
 
@@ -163,7 +163,7 @@ Lane lines are more or less isolated and parallel in the filtered bird's-eye per
 ##### Histogram analysis
 To find where the lanes start, a histogram of the image is created. Since the perspective transform "smears out" the pixels near the top of the image, the top half of the image is not taken into account when the histogram is generated. Pixel values are summed column-wise, yielding that the highest peak in each half-plane of the histogram should correspond to the x-value of the lane lines: 
 
-![Histogram analysis](./report_images/histogram.png "Histogram analysis"){width=50%}
+<img src="./report_images/histogram.png" alt="Histogram analysis" width="50%" height="50%">
 
 ##### Lane tracking
 With starting points found, the lane lines can be tracked through the image. Two different methods are used for this, _sliding windows_ and _polynomial tracking_. A 2nd degree polynomial is then fit to all pixels found by the trackers to give a convenient lane representation:
@@ -222,7 +222,7 @@ In summary, each image is processed according to the following pipeline:
 
 An example of the result is shown below:  
 
-![Full pipeline](./report_images/full_pipeline.png "Full pipeline"){width=75%}
+<img src="./report_images/full_pipeline.png" alt="Full pipeline" width="75%" height="75%">
 
 ##### Video performance
 The pipeline has been verified to perform well on the [project video](test_videos_output/project_video.mp4). It also does a pretty decent job on a more challenging [video](test_videos_output/challenge_video.mp4), with ghost lines and an overpass.
@@ -239,7 +239,7 @@ The most critical issue to get a robust lane line detector is image filter desig
 ##### Perspective transformation
 The bird's-eye perspective transform also fails for very sharp turns: 
 
-![Sharp turn](./report_images/birds_eye_sharp_turn.png "Sharp turn"){width=75%}
+<img src="./report_images/birds_eye_sharp_turn.png" alt="Sharp turn" width="75%" height="75%">
 
 For lane tracking to work in these cases, the perspective transform also has to be adaptive in some way. The region of interest mask that is applied in the image filtering process also eliminates some lane pixels, as evident in the example above. 
 
