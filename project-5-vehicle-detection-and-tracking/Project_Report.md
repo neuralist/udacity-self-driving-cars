@@ -38,7 +38,7 @@ Using raw pixel intensities is not robust to differences in attributes such as f
 
 ![Spatial binning](./report_images/spatial_binning.png "Spatial binning")
 
-The pixel intensity signature can be compressed a lot and still be useful. At 8x8, things are getting a bit difficult to discern. Thus, 16x16 is chosen to keep feature vector size reasonable. Plots of the resulting vector of YCrCb channels for the test images are shown in the figures below:
+The pixel intensity signature can be compressed a lot and still be useful. At 8x8, things are getting a bit difficult to discern. 32x32 is chosen to keep feature vector size reasonable. Plots of the resulting vector of YCrCb channels for the test images are shown in the figures below:
 
 ![Binning vector cars](./report_images/binning_vector_cars.png "Binning vector cars")
 ![Binning vector not cars](./report_images/binning_vector_not_cars.png "Binning vector not cars")
@@ -64,7 +64,7 @@ Briefly, HOG features are constructed by computing the gradient magnitudes and o
 It is not trivial to configure the HOG parameters. As a rough guide, cell size is chosen similar to the size of distinguishing features of the object to detect. Even fitting a classifier to different combinations of parameter configurations was not decisive, since several combinations yielded similarly high validation accuracies, but still performed differently on real camera images. Thus, empirical testing resulted in the parameter configuration 9 orientation bins, 8 pixels per cell and 2 cells per normalization block. All color channels of YCrCb space are used.
 
 ##### Total feature vector
-In summary, the feature vector was constructed as a combination of the three methods - binned color intensities, color histogram and HOG. All parts are generated from the camera image represented in all channels of the YCrCb colorspace. The size to the total feature vector is `16*16*3 + 32*3 + 7*7*2*2*9*3 = 6156`.
+In summary, the feature vector was constructed as a combination of the three methods - binned color intensities, color histogram and HOG. All parts are generated from the camera image represented in all channels of the YCrCb colorspace. The size to the total feature vector is `32*32*3 + 32*3 + 7*7*2*2*9*3 = 8460`.
 
 ---
 
@@ -90,7 +90,7 @@ The classifier performance was evaluated on classification accuracy:
 
 ```
 Training accuracy = 0.999
-Test accuracy = 0.993
+Test accuracy = 0.992
 ```
 
 No signs of overfitting, although so called "time-series issues" can potentially inflate test accuracy due to very similar examples in both datasets (even after shuffling). 
@@ -103,6 +103,12 @@ Vehicles can be detected by feeding the classifer with image patches extracted b
 ##### Region of interest
 First of all, it is worth noting that vehicles can not appear anywhere in the camera image. The road, and thus the cars, will be bounded to the lower part of the image.
 
+Interestingly, vehicles going in the other direction will sometimes also be detected:
+
+<img src="./report_images/car_opposite.png" alt="Opposite car" width="75%" height="75%">
+
+They are however filtered out in the current image pipeline.  
+
 ##### Window scales
 The apparent size of cars will decrease as they go further into the distance. This means that smaller windows should be used close to the "road horizon", and conversely bigger windows nearer to the autonomous car (i.e. at the bottom of the image). Whatever the size used, windows must be scaled to fit the classifer expectation of 64x64 pixels.
 
@@ -112,9 +118,11 @@ To configure which window sizes to use, and in what part of the camera image, ex
 |:----------------|:--------------| 
 | 64x64 | (400, 528) | 
 | 80x80 | (400, 560) | 
+| 96x96 | (400, 592) | 
+
+For example, the 64x64 windows scheme:
 
 ![64x64 windows](./report_images/windows_64.png "64x64 windows")
-![80x80 windows](./report_images/windows_80.png "80x80 windows")
 
 In reality, windows must also overlap when searching in the indicated region (see [Heat Mapping](#heat-mapping) for further details). Running the classifier using 64x64 windows, the following patches are classified as containing vehicles on a test image:
 
@@ -133,18 +141,17 @@ A second technique used to eliminate false positives is heat mapping. The list o
 
 ![Heatmap](./report_images/heatmap.png "Heatmap")
 
-Using these approaches will filter out most false positives (but not necessarily all):
+##### Sanity checking
+Some simple sanity checks have also been added to filter out false positives. Detection center points are expected to lie close to already detected vehicles. Otherwise, new detections must arrive from the left or right edges of the image, alternatively close to the road horizon if a car is caught up.
 
-![False Positives filter](./report_images/fp_filter.png "False Positives filter")
-
-See [Future Improvements](#future-improvements) for a discussion on what can be done to improve performance even further.
+Using these approaches will filter out most false positives (but not necessarily all). See [Future Improvements](#future-improvements) for a discussion on what can be done to improve performance even further. 
 
 ##### Detection performance
 The performance of the vehicle detector is evaluated on a few different scenes from the video:
 
 ![Detection performance](./report_images/classification_eval.png "Detection performance")
 
-One false positive remains, in image 4. The second car in image 9 has not been flagged yet by the detector, probably due to that the car is not fully in the image yet. Otherwise, it is spot on!
+The second car in image 9 has not been flagged yet by the detector, probably due to that the car is not fully in the image yet. Otherwise, it is spot on.
 
 ---
 
@@ -154,11 +161,7 @@ To track vehicles in the video, the vehicle detector is simply run on each image
 The tracker is still not able to meet real-time processing requirements. See [Future Improvements](#future-improvements) for some thoughts on how to tackle this.
 
 ##### Video performance
-The tracker has been verified to perform reasonably well on the [project video](test_videos_output/project_video.mp4). Bounding boxes are a bit wobbly, and there are a few false positives still remaining, but vehicle detection is consistent. The [Future Improvements](#future-improvements) section sketches improvements in these areas.
-
-Interestingly, vehicles going in the other direction is also sometimes detected, even when partly hidden behind the guard rail. They where not filtered out, since they would become important, for instance when a crossing is encountered.
-
-![Opposite car](./report_images/car_opposite.png "Opposite car")
+The tracker has been verified to perform reasonably well on the [project video](test_videos_output/project_video.mp4). There are a few false positives and false negatives still remaining, but overall, the vehicle detection is pretty consistent. The [Future Improvements](#future-improvements) section sketches improvements in these areas. 
 
 ---
 
@@ -177,7 +180,7 @@ The linear SVM did a decent job of classifying image patches, at least by measur
 4. Evaluate the classifier on another metric than classification accuracy, such as area under curve. Punish false positives harder.
 
 ##### Smoothing filter
-To get smoother bounding boxes and eliminate more false positives in the video, a filter should be constructed to average the detections over several frames. Actual cars will appear in roughly the same spot in consecutive frames, whereas spurious false detections will be discarded.
+A more sophisticated smoothing filtering process can be designed, and sanity checks can be extended to deal with the last remaining false positives.
 
 ##### Tracker performance
 The biggest flaw of the currect detector is the processing speed. Running the full sliding windows classification on each frame can not be achieved in real-time. To speed things up, the full sliding windows detection should only be run on some frames. In between, the vehicles can be tracked with dead reckoning. Also, reliable vehicle detections can also reduce the region of interest to search.
@@ -185,4 +188,4 @@ The biggest flaw of the currect detector is the processing speed. Running the fu
 More investigations could also show if/how the feature vector can be reduced while keeping acceptable tracking performance.
 
 ##### Deep learning
-It would also be very exciting to tackle this problem end-to-end using deep learning. By training for instance a CNN on a big dataset of examples with bounding boxes, it should be possible to achieve at least as good performance as the classifier with hand-crafted features.
+It would also be very exciting to tackle this problem end-to-end using deep learning, such as YOLO.
